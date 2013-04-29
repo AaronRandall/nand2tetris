@@ -48,5 +48,31 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
+    Mux16(a[0..15]=x, b[0..15]=false, sel=zx, out[0..15]=zxoutputx);
+    Not16(in[0..15]=zxoutputx, out[0..15]=notx);
+    Mux16(a[0..15]=zxoutputx, b[0..15]=notx, sel=nx, out[0..15]=nxoutputx);
+
+    Mux16(a[0..15]=y, b[0..15]=false, sel=zy, out[0..15]=zyoutputy);
+    Not16(in[0..15]=zyoutputy, out[0..15]=noty);
+    Mux16(a[0..15]=zyoutputy, b[0..15]=noty, sel=ny, out[0..15]=nyoutputy);
+
+    Add16(a[0..15]=nxoutputx, b[0..15]=nyoutputy, out[0..15]=xplusy);
+    And16(a[0..15]=nxoutputx, b[0..15]=nyoutputy, out[0..15]=xandy);
+    Mux16(a[0..15]=xandy, b[0..15]=xplusy, sel=f, out[0..15]=fout);
+
+    Not16(in[0..15]=fout, out[0..15]=notfout);
+
+    // Output 'out'
+    Mux16(a[0..15]=fout, b[0..15]=notfout, sel=no, out[0..7]=lowfinalout, out[8..15]=highfinalout, out[15]=ng, out=out);
+    
+    // Now set the zr and ng outputs
+    Or8Way(in[0..7]=lowfinalout, out=lowout);
+    Or8Way(in[0..7]=highfinalout, out=highout);
+
+    // if lowout=0 and highout=0, zr = 1, else zr = 0
+
+    Or(a=lowout, b=highout, out=aborout);
+    Not(in=aborout, out=zr);
+
 
 }
